@@ -6,7 +6,8 @@ const progressBarFull = document.querySelector('#progressBarFull');
 
 let currentQuestion = {};
 let acceptingAnswers = true;
-let score = 0;
+let score = 100;
+let timeLeft = 100;
 let questionCounter = 0;
 let availableQuestions = [];
 
@@ -45,19 +46,40 @@ let questions = [
     }
 ]
 
-const SCORE_POINTS = 100;
+const SCORE_PENALTY = 10;
 const MAX_QUESTIONS = 4;
+
+// Timer that counts down from 100
+countdown = () => {
+    timeInterval = setInterval(function() {
+        if (timeLeft > 1) {
+            scoreText.textContent = timeLeft + " seconds remaining.";
+            timeLeft--;
+        }
+        else if (timeLeft === 1) {
+            scoreText.textContent = timeLeft + " second remaining.";
+            timeLeft--;
+        }
+        else {
+            scoreText.textContent = "";
+            clearInterval(timeInterval);
+            return window.location.assign('end.html');
+        }
+    }, 1000);
+}
 
 startGame = () => {
     questionCounter = 0;
-    score = 0;
+    score = 100;
+    timeLeft = 100;
     availableQuestions = [...questions];
+    countdown();
     getNewQuestion();
 }
 
 getNewQuestion = () => {
     if(availableQuestions.length === 0 || questionCounter > MAX_QUESTIONS) {
-        localStorage.setItem('mostRecentScore', score)
+        localStorage.setItem('mostRecentScore', timeLeft);
 
         return window.location.assign('end.html');
     }
@@ -90,8 +112,8 @@ choices.forEach(choice => {
 
         let classToApply = selectedAnswer == currentQuestion.answer ? 'correct' : 'incorrect';
 
-        if(classToApply === 'correct') {
-            incrementScore(SCORE_POINTS);
+        if(classToApply === 'incorrect') {
+            decrementScore(SCORE_PENALTY);
         }
 
         selectedChoice.parentElement.classList.add(classToApply);
@@ -99,13 +121,13 @@ choices.forEach(choice => {
         setTimeout(() => {
             selectedChoice.parentElement.classList.remove(classToApply);
             getNewQuestion();
-        }, 1000)
+        }, 1000);
     })
 })
 
-incrementScore = num => {
-    score +=num;
-    scoreText.innerText = score;
+decrementScore = num => {
+    score = score - num;
+    timeLeft = timeLeft - num;
 }
 
 startGame();
